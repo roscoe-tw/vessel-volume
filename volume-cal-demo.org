@@ -1,0 +1,83 @@
+* maxima
+#+begin_src maxima :tangle volume-vessel.mac
+  kill(all);
+
+  /*載入端板容積計算函數*/
+  load("Head_volume.mac");
+
+  /*圓桶形容積公式*/
+  volume_cylinder(id, h):=block([],0.25*id^2*%pi*h);
+
+  /*壓力容器容積計算參數*/
+  ID: 1230.0;
+  TL2TL: 1000.0;
+  head[type]: "SE";
+
+  /*端板直部*/
+  L: 38.0 ;
+
+  /*端板容積*/
+  Volume[head]:volume_head(ID,L,head[type]);
+
+  /*端板數量*/
+  number[head]: 2;
+
+  /*圓桶形殼板容積*/
+  Volume[shell]:volume_cylinder(ID,(TL2TL-L*2));
+
+  /*殼板數量*/
+  number[shell]: 1;
+
+  /*容器內容積*/
+  Volume[sum]: Volume[head] * number[head] + Volume[shell] * number[shell];
+
+  s:openw("volume-1.tex");
+
+  printf(s,"\\section{計算壓力容器的體積}");
+  printf(s,"\\begin{center}~%");
+
+  printf(s,"\\begin{tabular}{rrl}~%");
+  printf(s,"內徑(ID) & ~,3f & $mm$\\\\~%", ID);
+  printf(s,"T.L. to T.L. & ~,3f & $mm$\\\\~%", TL2TL);
+  printf(s,"殼板形式 & 圓桶形 &\\\\~%");
+  printf(s,"殼板容積 & ~,3f & $mm^3$\\\\~%", float(Volume[shell]));
+  printf(s,"殼板數量 & ~A &\\\\~%", number[shell]);
+  printf(s,"端板形式 & ~A &\\\\~%", head[type]);
+  printf(s,"端板直部 & ~,3f & $mm$ \\\\~%", L);
+  printf(s,"端板容積 & ~,3f & $mm^3$ \\\\~%", float(Volume[head]));
+  printf(s,"端板數量 & ~A & \\\\~%", number[head]);
+  printf(s,"壓力容器容積 & ~,3f & $mm^3$ \\\\~%", float(Volume[sum]));
+  printf(s,"\\end{tabular}~%");
+
+  printf(s,"\\end{center}~%");
+
+  close(s);
+  quit();
+#+end_src
+* latex
+#+begin_src latex :tangle volume-vessel.tex
+  \documentclass[12pt]{article}
+  \usepackage{xeCJK}
+  \setmainfont{Noto Sans CJK TC Medium}
+  \setCJKmainfont{Noto Sans CJK TC Medium}
+  \XeTeXlinebreaklocale "zh"
+  \XeTeXlinebreakskip = 0pt plus 1pt
+
+  \author{各申機械設計工作室}
+  \date{2022-11-03}
+  \title{壓力容器容積計算}
+
+  \begin{document}
+
+  \maketitle
+
+  \input{volume-1}
+
+  \end{document}
+#+end_src
+* makefile
+#+begin_src makefile :tangle makefile
+  volume-vessel.pdf : volume-vessel.tex volume-vessel.mac
+	  maxima -b volume-vessel.mac
+	  xelatex volume-vessel.tex
+#+end_src
